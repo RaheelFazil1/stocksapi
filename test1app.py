@@ -1,8 +1,9 @@
+from flask import Flask, request, jsonify
 import requests
 from bs4 import BeautifulSoup
 from datetime import datetime
-import pandas as pd
 
+app = Flask(__name__)
 
 def psx_data(symbol):
     print(symbol.upper())
@@ -75,18 +76,14 @@ def psx_data(symbol):
 
     return price_data
 
+@app.route('/api/psx_data', methods=['GET'])
+def get_psx_data():
+    symbol = request.args.get('symbol')
+    if not symbol:
+        return jsonify({'error': 'Symbol parameter is required'}), 400
 
-out = psx_data('kosm')
-print(out)
+    data = psx_data(symbol)
+    return jsonify(data)
 
-new_df = pd.DataFrame([out])
-file_path = "PSX_stock_prices.csv"
-try:
-    old_df = pd.read_csv(file_path)
-except FileNotFoundError:
-    old_df = pd.DataFrame(columns=new_df.columns)
-updated_df = pd.concat([old_df, new_df], ignore_index=True)
-updated_df.to_csv(file_path, index=False)
-print(updated_df)
-
-
+if __name__ == '__main__':
+    app.run(debug=True)
